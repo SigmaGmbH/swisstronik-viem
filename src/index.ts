@@ -1,20 +1,18 @@
 import {
   createClient,
   http,
-  formatTransactionRequest,
-  type CallParameters,
-  createPublicClient,
   Chain,
   Hex,
   publicActions,
+  PublicClient,
+  walletActions,
+  Account,
 } from "viem";
-import { mainnet } from "viem/chains";
 import {
   decryptNodeResponseWithPublicKey,
   encryptDataFieldWithPublicKey,
   getNodePublicKey,
 } from "@swisstronik/utils";
-import { call, estimateGas } from "viem/actions";
 
 export const swisstronikTestnet: Chain = {
   id: 1291,
@@ -46,63 +44,68 @@ export type SwisstronikClient = Prettify<
   ReturnType<typeof createSwisstronikClient>
 >;
 
-export const createSwisstronikClient = (chain: Chain) =>
-  createClient({
-    chain,
+export const createSwisstronikClient = (parameters: {
+  chain: Chain;
+  account?: Account
+}): PublicClient<any> &
+  ReturnType<typeof publicActions> &
+  ReturnType<typeof walletActions> & {
+    getNodePublicKey: () => Promise<Hex>;
+  } => {
+  const client = createClient({
+    chain: parameters.chain,
+    account: parameters.account,
     name: "Swisstronik Client",
     type: "swisstronikClient",
     transport: http(),
-  })
+  } as any) as PublicClient<any>;
+
+  client.request = async (args, options) => {
+    const param = (args?.params as any)?.[0];
+    // console.log("args.method:", args.method);
+    // console.log("param:", param);
+
+    if (
+      ["eth_call", "eth_estimateGas", "eth_sendTransaction"].includes(
+        args.method
+      ) &&
+      param?.to &&
+      param?.data
+    ) {
+      const { publicKey } = await getNodePublicKey(
+        parameters.chain.rpcUrls.default.http[0]
+      );
+
+      const [encryptedData, encryptionKey] = encryptDataFieldWithPublicKey(
+        publicKey!,
+        param.data
+      );
+
+      param.data = encryptedData as Hex;
+
+      const res: string = await client.transport.request(args, options);
+
+      if (args.method !== "eth_call") return res;
+
+      const decryptedRes = decryptNodeResponseWithPublicKey(
+        publicKey!,
+        res,
+        encryptionKey
+      );
+
+      return ("0x" + Buffer.from(decryptedRes).toString("hex")) as Hex;
+    }
+
+    return client.transport.request(args as any, options);
+  };
+
+  return client
     .extend(publicActions)
+    .extend(walletActions)
     .extend((client) => ({
       async getNodePublicKey() {
-        return (await getNodePublicKey(chain.rpcUrls.default.http[0]))
-          .publicKey! as Hex;
+        return (await getNodePublicKey(client.chain!.rpcUrls.default.http[0]))
+          .publicKey as Hex;
       },
-      async call(args) {
-        if (!args.data || !args.to) return call(client, args);
-
-        const publicKey = await this.getNodePublicKey();
-
-        const [encryptedData, encryptionKey] = encryptDataFieldWithPublicKey(
-          publicKey,
-          args.data!
-        );
-
-        args.data = encryptedData as Hex;
-
-        const { data: encryptedRes } = await call(client, args);
-
-        const decryptedRes = decryptNodeResponseWithPublicKey(
-          publicKey,
-          encryptedRes!,
-          encryptionKey
-        );
-
-        return {
-          data: ("0x" + Buffer.from(decryptedRes).toString("hex")) as Hex,
-        };
-      },
-
-      async estimateGas(args) {
-        if (!args.data || !args.to) return estimateGas(client, args);
-
-        const publicKey = await this.getNodePublicKey();
-
-        const [encryptedData, encryptionKey] = encryptDataFieldWithPublicKey(
-          publicKey,
-          args.data!
-        );
-
-        args.data = encryptedData as Hex;
-
-        const encryptedRes = await estimateGas(client, args);
-
-        return encryptedRes;
-      }
     }));
-
-// const publicClient = createPublicClient({
-//   chain: mainnet,
-//   transport: http(),
-// });
+};
