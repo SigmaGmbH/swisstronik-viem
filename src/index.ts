@@ -4,15 +4,19 @@ import {
   Chain,
   Hex,
   publicActions,
-  PublicClient,
   walletActions,
   Account,
+  WalletActions,
+  PublicActions,
+  Client,
+  Transport,
 } from "viem";
 import {
   decryptNodeResponseWithPublicKey,
   encryptDataFieldWithPublicKey,
   getNodePublicKey,
 } from "@swisstronik/utils";
+import { prepareTransactionRequest } from "./prepareTransactionRequest";
 
 export const swisstronikTestnet: Chain = {
   id: 1291,
@@ -40,30 +44,41 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
-export type SwisstronikClient = Prettify<
-  ReturnType<typeof createSwisstronikClient>
+export type SwisstronikLightWeightClient = Prettify<
+  Client<Transport, Chain, Account> & {
+    getNodePublicKey: () => Promise<Hex>;
+  }
 >;
 
-export const createSwisstronikClient = (parameters: {
+export type SwisstronikClient = Prettify<
+  Client<Transport, Chain, Account> &
+    PublicActions &
+    WalletActions<Chain, Account> & {
+      getNodePublicKey: () => Promise<Hex>;
+    }
+>;
+
+/**
+ *
+ *You can use the Client as-is, with no decorated Actions, to maximize tree-shaking in your app.
+ * This is useful if you are pedantic about bundle size and want to only include the Actions you use.
+ */
+export const createLightWeightClient = (parameters: {
   chain: Chain;
-  account?: Account
-}): PublicClient<any> &
-  ReturnType<typeof publicActions> &
-  ReturnType<typeof walletActions> & {
-    getNodePublicKey: () => Promise<Hex>;
-  } => {
+  account?: Account;
+  name?: string;
+  type?: string;
+}): SwisstronikLightWeightClient => {
   const client = createClient({
     chain: parameters.chain,
     account: parameters.account,
-    name: "Swisstronik Client",
-    type: "swisstronikClient",
+    name: parameters.name || "Swisstronik Light Weight Client",
+    type: parameters.type || "SwisstronikLightWeightClient",
     transport: http(),
-  } as any) as PublicClient<any>;
+  } as any) as Client<any>;
 
   client.request = async (args, options) => {
     const param = (args?.params as any)?.[0];
-    // console.log("args.method:", args.method);
-    // console.log("param:", param);
 
     if (
       ["eth_call", "eth_estimateGas", "eth_sendTransaction"].includes(
@@ -99,13 +114,34 @@ export const createSwisstronikClient = (parameters: {
     return client.transport.request(args as any, options);
   };
 
-  return client
-    .extend(publicActions)
-    .extend(walletActions)
-    .extend((client) => ({
-      async getNodePublicKey() {
-        return (await getNodePublicKey(client.chain!.rpcUrls.default.http[0]))
-          .publicKey as Hex;
-      },
-    }));
+  (client as SwisstronikClient).prepareTransactionRequest = async (args: any) =>
+    prepareTransactionRequest(client as any, args) as any;
+
+  (client as SwisstronikClient).getNodePublicKey = async () =>
+    (await getNodePublicKey(client.chain!.rpcUrls.default.http[0]))
+      .publicKey as Hex;
+
+  return client as any;
+};
+
+/**
+ *
+ * Client with decorated Actions, which includes all the Actions available in the library.
+ *
+ */
+export const createSwisstronikClient = (parameters: {
+  chain: Chain;
+  account?: Account;
+  name?: string;
+  type?: string;
+}): SwisstronikClient => {
+  const client = createLightWeightClient({
+    chain: parameters.chain,
+    account: parameters.account,
+    name: parameters.name || "Swisstronik Client",
+    type: parameters.type || "swisstronikClient",
+    transport: http(),
+  } as any) as Client<any>;
+
+  return client.extend(publicActions).extend(walletActions) as any;
 };

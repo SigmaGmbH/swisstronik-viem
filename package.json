@@ -1,5 +1,5 @@
 {
-  "name": "swisstronik-viem-client",
+  "name": "@swisstronik/viem-client",
   "version": "1.0.0",
   "description": "Viem client for Swisstronik network",
   "main": "lib/index.js",

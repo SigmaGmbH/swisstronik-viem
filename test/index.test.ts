@@ -2,31 +2,36 @@ import {
   call,
   estimateGas,
   readContract,
+  sendTransaction,
   waitForTransactionReceipt,
+  writeContract,
 } from "viem/actions";
+import { parseEther } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import {
+  createLightWeightClient,
   createSwisstronikClient,
-  type SwisstronikClient,
   swisstronikTestnet,
 } from "../src";
 import { abi } from "./ERC20ABI";
-import { createWalletClient, parseEther, PrivateKeyAccount } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 
 describe("createSwisstronikClient Tests", () => {
-  let swisstronikClient: SwisstronikClient;
-  let account: PrivateKeyAccount;
+  //NEVER SHARE YOUR PRIVATE KEYS
+  const account = privateKeyToAccount(
+    "0x9a3247611b86ed89cc6c1cde251fcc29fd5624e93087968eb6d7be36c420a70a"
+  );
+
+  const swisstronikClient = createSwisstronikClient({
+    chain: swisstronikTestnet,
+    account, // Optional: Needed to send/sign transactions
+  });
+
+  const swisstronikLightWeightClient = createLightWeightClient({
+    chain: swisstronikTestnet,
+    account, // Optional: Needed to send/sign transactions
+  });
 
   it("Should create a Swisstronik client", async () => {
-    //NEVER SHARE YOUR PRIVATE KEYS
-    account = privateKeyToAccount(
-      "0x9a3247611b86ed89cc6c1cde251fcc29fd5624e93087968eb6d7be36c420a70a"
-    );
-
-    swisstronikClient = createSwisstronikClient({
-      chain: swisstronikTestnet,
-      account, // Optional: Needed to send/sign transactions
-    });
     expect(swisstronikClient).toBeDefined();
   });
 
@@ -60,8 +65,8 @@ describe("createSwisstronikClient Tests", () => {
       );
     });
 
-    it("SwisstronikClient as input parameter", async () => {
-      const res = await call(swisstronikClient, {
+    it("swisstronikLightWeightClient with Tree-shaking", async () => {
+      const res = await call(swisstronikLightWeightClient, {
         account: account.address,
         to: "0xF8bEB8c8Be514772097103e39C2ccE057117CC92",
         data: "0x61bc221a",
@@ -84,8 +89,8 @@ describe("createSwisstronikClient Tests", () => {
       expect(res).toEqual(23325n);
     });
 
-    it("SwisstronikClient as input parameter", async () => {
-      const res = await estimateGas(swisstronikClient, {
+    it("swisstronikLightWeightClient with Tree-shaking", async () => {
+      const res = await estimateGas(swisstronikLightWeightClient, {
         account: account.address,
         to: "0xF8bEB8c8Be514772097103e39C2ccE057117CC92",
         data: "0x61bc221a",
@@ -100,11 +105,28 @@ describe("createSwisstronikClient Tests", () => {
       const hash = await swisstronikClient.sendTransaction({
         to: "0x0497cc339c0397b7Addd591B2160dd2f5371eA3b",
         value: parseEther("0.001"),
-      } as any);
+      });
 
-      const receipt = await waitForTransactionReceipt(swisstronikClient, {
+      const receipt = await swisstronikClient.waitForTransactionReceipt({
         hash,
       });
+
+      expect(hash).toBeDefined();
+      expect(receipt.status).toEqual("success");
+    });
+
+    it("swisstronikLightWeightClient with Tree-shaking", async () => {
+      const hash = await sendTransaction(swisstronikLightWeightClient, {
+        to: "0x0497cc339c0397b7Addd591B2160dd2f5371eA3b",
+        value: parseEther("0.001"),
+      });
+
+      const receipt = await waitForTransactionReceipt(
+        swisstronikLightWeightClient,
+        {
+          hash,
+        }
+      );
 
       expect(hash).toBeDefined();
       expect(receipt.status).toEqual("success");
@@ -125,8 +147,8 @@ describe("createSwisstronikClient Tests", () => {
       expect(balanceOf).toBeGreaterThanOrEqual(0n);
     });
 
-    it("SwisstronikClient as input parameter", async () => {
-      const balanceOf = (await readContract(swisstronikClient, {
+    it("swisstronikLightWeightClient with Tree-shaking", async () => {
+      const balanceOf = (await readContract(swisstronikLightWeightClient, {
         address: ERC20_CONTRACT_ADDRESS,
         abi,
         functionName: "balanceOf",
@@ -146,13 +168,30 @@ describe("createSwisstronikClient Tests", () => {
         abi,
         functionName: "mint100tokens",
         args: [],
-      } as any);
+      });
 
-      const receipt = await waitForTransactionReceipt(swisstronikClient, {
+      const receipt = await swisstronikClient.waitForTransactionReceipt({
         hash,
       });
 
-      console.log("Transaction receipt:", receipt);
+      expect(hash).toBeDefined();
+      expect(receipt.status).toEqual("success");
+    });
+
+    it("swisstronikLightWeightClient with Tree-shaking", async () => {
+      const hash = await writeContract(swisstronikLightWeightClient, {
+        address: ERC20_CONTRACT_ADDRESS,
+        abi,
+        functionName: "mint100tokens",
+        args: [],
+      });
+
+      const receipt = await waitForTransactionReceipt(
+        swisstronikLightWeightClient,
+        {
+          hash,
+        }
+      );
 
       expect(hash).toBeDefined();
       expect(receipt.status).toEqual("success");
@@ -168,11 +207,30 @@ describe("createSwisstronikClient Tests", () => {
         abi,
         functionName: "transfer",
         args: [account.address, 5n],
-      } as any);
+      });
 
-      const receipt = await waitForTransactionReceipt(swisstronikClient, {
+      const receipt = await swisstronikClient.waitForTransactionReceipt({
         hash,
       });
+
+      expect(hash).toBeDefined();
+      expect(receipt.status).toEqual("success");
+    });
+
+    it("swisstronikLightWeightClient with Tree-shaking", async () => {
+      const hash = await writeContract(swisstronikLightWeightClient, {
+        address: ERC20_CONTRACT_ADDRESS,
+        abi,
+        functionName: "transfer",
+        args: [account.address, 5n],
+      });
+
+      const receipt = await waitForTransactionReceipt(
+        swisstronikLightWeightClient,
+        {
+          hash,
+        }
+      );
 
       expect(hash).toBeDefined();
       expect(receipt.status).toEqual("success");
