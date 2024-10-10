@@ -59,7 +59,6 @@ export type SwisstronikClient = Prettify<
 >;
 
 /**
- *
  *You can use the Client as-is, with no decorated Actions, to maximize tree-shaking in your app.
  * This is useful if you are pedantic about bundle size and want to only include the Actions you use.
  */
@@ -125,9 +124,7 @@ export const createLightWeightClient = (parameters: {
 };
 
 /**
- *
  * Client with decorated Actions, which includes all the Actions available in the library.
- *
  */
 export const createSwisstronikClient = (parameters: {
   chain: Chain;

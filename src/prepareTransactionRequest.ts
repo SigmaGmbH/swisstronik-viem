@@ -1,31 +1,29 @@
-import type { Account } from "viem/accounts/types.js";
-import { parseAccount } from "viem/accounts";
+import { parseAccount, 
+  // type Account 
+} from "viem/accounts";
 import {
-  type EstimateGasParameters,
+  getBlock as getBlock_,
   estimateFeesPerGas,
+  getTransactionCount,
+  getChainId as getChainId_,
 } from "viem/actions";
-import { getBlock as getBlock_ } from "viem/actions";
-import { getTransactionCount } from "viem/actions";
 import {
   assertRequest,
   blobsToCommitments,
   Eip1559FeesNotSupportedError,
   MaxFeePerGasTooLowError,
+  blobsToProofs,
+  commitmentsToVersionedHashes,
+  toBlobSidecars,
+  getTransactionType,
+  // type PrepareTransactionRequestParameters,
+  // type PrepareTransactionRequestReturnType,
+  // type Chain,
+  // type Block,
 } from "viem";
-import type { Block } from "viem/types/block.js";
-import type { Chain } from "viem/types/chain.js";
-import type { TransactionSerializable } from "viem/types/transaction.js";
-import { blobsToProofs } from "viem";
-import { commitmentsToVersionedHashes } from "viem";
-import { toBlobSidecars } from "viem";
-import { getTransactionType } from "viem";
-import { getChainId as getChainId_ } from "viem/actions";
-import {
-  PrepareTransactionRequestParameters,
-  PrepareTransactionRequestReturnType,
-} from "viem";
+// import type { TransactionSerializable } from "viem/types/transaction.js";
 import { getAction } from "viem/utils";
-import { SwisstronikClient } from "src";
+import { SwisstronikClient } from "./";
 import { encryptDataFieldWithPublicKey } from "@swisstronik/utils";
 import { estimateGas } from "./estimateGas";
 
@@ -39,12 +37,12 @@ const defaultParameters = [
 ] as const;
 
 export async function prepareTransactionRequest<
-  chain extends Chain | undefined,
-  account extends Account | undefined
+  chain extends any | undefined,
+  account extends any | undefined
 >(
   client: SwisstronikClient,
-  args: PrepareTransactionRequestParameters
-): Promise<PrepareTransactionRequestReturnType> {
+  args: any
+): Promise<any> {
   const {
     account: account_ = client.account,
     blobs,
@@ -72,8 +70,8 @@ export async function prepareTransactionRequest<
     request.data = encryptedData as `0x${string}`;
   }
 
-  let block: Block | undefined;
-  async function getBlock(): Promise<Block> {
+  let block: any | undefined;
+  async function getBlock(): Promise<any> {
     if (block) return block;
     block = await getAction(
       client as any,
@@ -152,7 +150,7 @@ export async function prepareTransactionRequest<
   ) {
     try {
       request.type = getTransactionType(
-        request as TransactionSerializable
+        request as any
       ) as any;
     } catch {
       // infer type from block
@@ -175,9 +173,9 @@ export async function prepareTransactionRequest<
         const { maxFeePerGas, maxPriorityFeePerGas } = await estimateFeesPerGas(
           client as any,
           {
-            block: block as Block,
+            block: block as any,
             chain,
-            request: request as PrepareTransactionRequestParameters,
+            request: request as any,
           } as any
         );
 
@@ -205,9 +203,9 @@ export async function prepareTransactionRequest<
       const { gasPrice: gasPrice_ } = await estimateFeesPerGas(
         client as any,
         {
-          block: block as Block,
+          block: block as any,
           chain,
-          request: request as PrepareTransactionRequestParameters,
+          request: request as any,
           type: "legacy",
         } as any
       );
@@ -222,7 +220,7 @@ export async function prepareTransactionRequest<
       "estimateGas"
     )({
       ...request,
-      data:  unencryptedData,
+      data: unencryptedData,
       account: account
         ? { address: account.address, type: "json-rpc" }
         : undefined,
