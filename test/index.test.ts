@@ -12,7 +12,7 @@ import {
   createLightWeightClient,
   createSwisstronikClient,
   swisstronikTestnet,
-} from "../src";
+} from "../src/index";
 import { abi } from "./ERC20ABI";
 
 describe("createSwisstronikClient Tests", () => {

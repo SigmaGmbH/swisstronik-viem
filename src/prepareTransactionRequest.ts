@@ -1,5 +1,5 @@
 import { parseAccount, 
-  // type Account 
+  type Account 
 } from "viem/accounts";
 import {
   getBlock as getBlock_,
@@ -16,14 +16,14 @@ import {
   commitmentsToVersionedHashes,
   toBlobSidecars,
   getTransactionType,
-  // type PrepareTransactionRequestParameters,
-  // type PrepareTransactionRequestReturnType,
-  // type Chain,
-  // type Block,
+  type PrepareTransactionRequestParameters,
+  type PrepareTransactionRequestReturnType,
+  type Chain,
+  type Block,
 } from "viem";
 // import type { TransactionSerializable } from "viem/types/transaction.js";
 import { getAction } from "viem/utils";
-import { SwisstronikClient } from "./";
+import { SwisstronikClient } from "./index.js";
 import { encryptDataFieldWithPublicKey } from "@swisstronik/utils";
 import { estimateGas } from "./estimateGas";
 
@@ -37,12 +37,12 @@ const defaultParameters = [
 ] as const;
 
 export async function prepareTransactionRequest<
-  chain extends any | undefined,
-  account extends any | undefined
+  chain extends Chain | undefined,
+  account extends Account | undefined
 >(
   client: SwisstronikClient,
-  args: any
-): Promise<any> {
+  args: PrepareTransactionRequestParameters
+): Promise<PrepareTransactionRequestReturnType> {
   const {
     account: account_ = client.account,
     blobs,
@@ -70,11 +70,11 @@ export async function prepareTransactionRequest<
     request.data = encryptedData as `0x${string}`;
   }
 
-  let block: any | undefined;
-  async function getBlock(): Promise<any> {
+  let block: Block | undefined;
+  async function getBlock(): Promise<Block> {
     if (block) return block;
     block = await getAction(
-      client as any,
+      client,
       getBlock_,
       "getBlock"
     )({ blockTag: "latest" });
@@ -150,8 +150,8 @@ export async function prepareTransactionRequest<
   ) {
     try {
       request.type = getTransactionType(
-        request as any
-      ) as any;
+        request
+      );
     } catch {
       // infer type from block
       const block = await getBlock();
@@ -171,11 +171,11 @@ export async function prepareTransactionRequest<
       ) {
         const block = await getBlock();
         const { maxFeePerGas, maxPriorityFeePerGas } = await estimateFeesPerGas(
-          client as any,
+          client,
           {
-            block: block as any,
+            block: block as Block,
             chain,
-            request: request as any,
+            request: request as PrepareTransactionRequestParameters,
           } as any
         );
 
@@ -201,11 +201,11 @@ export async function prepareTransactionRequest<
 
       const block = await getBlock();
       const { gasPrice: gasPrice_ } = await estimateFeesPerGas(
-        client as any,
+        client,
         {
-          block: block as any,
+          block: block as Block,
           chain,
-          request: request as any,
+          request: request as PrepareTransactionRequestParameters,
           type: "legacy",
         } as any
       );
@@ -215,7 +215,7 @@ export async function prepareTransactionRequest<
 
   if (parameters.includes("gas") && typeof gas === "undefined")
     request.gas = await getAction(
-      client as any,
+      client,
       estimateGas,
       "estimateGas"
     )({
@@ -224,9 +224,9 @@ export async function prepareTransactionRequest<
       account: account
         ? { address: account.address, type: "json-rpc" }
         : undefined,
-    } as any);
+    });
 
-  assertRequest(request as any);
+  assertRequest(request);
 
   delete request.parameters;
 

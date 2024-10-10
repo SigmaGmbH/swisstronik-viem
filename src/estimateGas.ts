@@ -1,8 +1,8 @@
 import type { Address } from "abitype";
-import type { Account } from "viem/accounts/types.js";
+import type { Account } from "viem";
 import { parseAccount, type ParseAccountErrorType } from "viem/accounts";
-import type { Client } from "viem/clients/createClient.js";
-import type { Transport } from "viem/clients/transports/createTransport.js";
+import type { Client } from "viem";
+import type { Transport } from "viem";
 import {
   BaseError,
   TransactionRequest,
@@ -18,7 +18,7 @@ import {
   type RecoverAuthorizationAddressErrorType,
   recoverAuthorizationAddress,
 } from "viem/experimental";
-import type { Chain } from "viem/types/chain.js";
+import type { Chain } from "viem";
 import {
   type RequestErrorType ,
   type GetEstimateGasErrorReturnType,
