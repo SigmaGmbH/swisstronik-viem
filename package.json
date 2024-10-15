@@ -7,10 +7,14 @@
   "scripts": {
     "lint": "eslint '{src,test}/**/*.ts'",
     "build": "tsc --project tsconfig.build.json",
-    "test": "jest --config=./test/jest.config.js"
+    "test": "jest --config=./test/jest.config.js --runInBand"
   },
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:SigmaGmbH/swisstronik-viem-client.git"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.13",
     "@types/node": "^22.7.4",
