@@ -20,7 +20,7 @@ npm install @swisstronik/viem-client@latest viem@latest --save
 ## Usage
 
 ```js
-import { createSwisstronikClient, swisstronikTestnet } from "../src/index";
+import { createSwisstronikClient, swisstronikTestnet } from "@swisstronik/viem-client@latest";
 
 // Client with decorated Actions, which includes all the Actions available in the library.
 const swisstronikClient = createSwisstronikClient({
@@ -45,7 +45,7 @@ console.log(balance);
 ### Sending transactions & performing calls
 
 ```js
-import { createSwisstronikClient, swisstronikTestnet } from "../src/index";
+import { createSwisstronikClient, swisstronikTestnet } from "@swisstronik/viem-client@latest";
 import { parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
@@ -85,7 +85,7 @@ console.log(receipt);
 ### Interacting with a Smart Contract
 
 ```js
-import { createSwisstronikClient, swisstronikTestnet } from "../src/index";
+import { createSwisstronikClient, swisstronikTestnet } from "@swisstronik/viem-client@latest";
 import { privateKeyToAccount } from "viem/accounts";
 
 const account = privateKeyToAccount("0x...");
@@ -122,7 +122,7 @@ console.log(receipt);
 You can use the Client as-is, with no decorated Actions, to maximize tree-shaking in your app. This is useful if you are concerned about bundle size and want to only include the Actions you use.
 
 ```js
-import { createSwisstronikClient, swisstronikTestnet } from "../src/index";
+import { createSwisstronikClient, swisstronikTestnet } from "@swisstronik/viem-client@latest";
 import { privateKeyToAccount } from "viem/accounts";
 import {
   call,
