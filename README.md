@@ -14,7 +14,7 @@ Swisstronik Viem Client allows the users to use `viem` library with [Swisstronik
 > Note: Make sure you are using `viem` version 2.21.19 or higher in your project.
 
 ```bash
-npm install @swisstronik/viem-client@latest --save
+npm install @swisstronik/viem-client@latest viem@latest --save
 ```
 
 ## Usage
