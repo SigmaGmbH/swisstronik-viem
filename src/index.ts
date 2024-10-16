@@ -10,6 +10,7 @@ import {
   PublicActions,
   Client,
   Transport,
+  createWalletClient,
 } from "viem";
 import {
   decryptNodeResponseWithPublicKey,
@@ -65,6 +66,7 @@ export type SwisstronikClient = Prettify<
 export const createSwisstronikLightWeightClient = (parameters: {
   chain: Chain;
   account?: Account;
+  transport?: Transport;
   name?: string;
   type?: string;
 }): SwisstronikLightWeightClient => {
@@ -73,7 +75,7 @@ export const createSwisstronikLightWeightClient = (parameters: {
     account: parameters.account,
     name: parameters.name || "Swisstronik Light Weight Client",
     type: parameters.type || "SwisstronikLightWeightClient",
-    transport: http(),
+    transport: parameters.transport?? http(),
   } as any) as Client<any>;
 
   client.request = async (args, options) => {
@@ -129,6 +131,7 @@ export const createSwisstronikLightWeightClient = (parameters: {
 export const createSwisstronikClient = (parameters: {
   chain: Chain;
   account?: Account;
+  transport?: Transport;
   name?: string;
   type?: string;
 }): SwisstronikClient => {
@@ -137,7 +140,7 @@ export const createSwisstronikClient = (parameters: {
     account: parameters.account,
     name: parameters.name || "Swisstronik Client",
     type: parameters.type || "swisstronikClient",
-    transport: http(),
+    transport: parameters.transport?? http(),
   } as any) as Client<any>;
 
   return client.extend(publicActions).extend(walletActions) as any;
